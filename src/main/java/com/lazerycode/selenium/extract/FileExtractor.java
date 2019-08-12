@@ -46,7 +46,7 @@ public class FileExtractor {
      * @throws IllegalArgumentException Unsupported archive
      * @throws MojoFailureException     Error running plugin
      */
-    public String extractFileFromArchive(File downloadedCompressedFile, String extractedToFilePath, BinaryType possibleFilenames) throws IOException, IllegalArgumentException, MojoFailureException {
+    public synchronized String extractFileFromArchive(File downloadedCompressedFile, String extractedToFilePath, BinaryType possibleFilenames) throws IOException, IllegalArgumentException, MojoFailureException {
         DownloadableFileType fileType = DownloadableFileType.valueOf(FilenameUtils.getExtension(downloadedCompressedFile.getName()).toUpperCase());
         LOG.debug("Determined archive type: " + fileType);
         LOG.debug("Overwrite files that exist: " + overwriteFilesThatExist);
@@ -80,8 +80,7 @@ public class FileExtractor {
      * @return boolean
      * @throws IOException IOException
      */
-
-    String unzipFile(File downloadedCompressedFile, String extractedToFilePath, BinaryType possibleFilenames) throws IOException, ExpectedFileNotFoundException {
+    synchronized String unzipFile(File downloadedCompressedFile, String extractedToFilePath, BinaryType possibleFilenames) throws IOException, ExpectedFileNotFoundException {
         LOG.debug("Attempting to extract binary from .zip file...");
         ArrayList<String> filenamesWeAreSearchingFor = new ArrayList<String>(possibleFilenames.getBinaryFilenames());
         ZipFile zip = new ZipFile(downloadedCompressedFile);
@@ -118,7 +117,6 @@ public class FileExtractor {
      * @return boolean
      * @throws IOException MojoFailureException
      */
-
     private String untarFile(InputStream compressedFileInputStream, String extractedToFilePath, BinaryType possibleFilenames) throws IOException, ExpectedFileNotFoundException {
         LOG.debug("Attempting to extract binary from a .tar file...");
         ArchiveEntry currentFile;

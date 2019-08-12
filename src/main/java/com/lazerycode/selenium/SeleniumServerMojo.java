@@ -195,7 +195,7 @@ public class SeleniumServerMojo extends AbstractMojo {
     private static final Logger LOG = Logger.getLogger(SeleniumServerMojo.class);
 
     @Override
-    public synchronized void execute() throws MojoExecutionException, MojoFailureException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
 	BasicConfigurator.configure(new MavenLoggerLog4jBridge(getLog()));
         LOG.info(" ");
         LOG.info("--------------------------------------------------------");

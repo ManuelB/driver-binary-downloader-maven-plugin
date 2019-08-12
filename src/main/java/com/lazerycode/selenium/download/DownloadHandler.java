@@ -41,7 +41,8 @@ public class DownloadHandler {
         fileDownloader.setConnectTimeout(fileDownloadConnectTimeout);
     }
 
-    private boolean checkFileHash(File fileToCheck, String hash, HashType hashType) throws IOException, MojoExecutionException {
+    private synchronized boolean checkFileHash(File fileToCheck, String hash, HashType hashType) throws IOException, MojoExecutionException {
+
         FileHashChecker fileHashChecker = new FileHashChecker(fileToCheck);
         fileHashChecker.setExpectedHash(hash, hashType);
 
@@ -59,30 +60,31 @@ public class DownloadHandler {
      * @throws URISyntaxException     Invalid URI
      */
     protected File downloadFile(DriverDetails driverDetails, boolean shouldWeCheckFileHash) throws MojoExecutionException, IOException, URISyntaxException {
-
         URL remoteFileLocation = driverDetails.fileLocation;
 
         final String filename = FilenameUtils.getName(remoteFileLocation.getFile());
-        for (int retryAttempts = 1; retryAttempts <= this.fileDownloadRetryAttempts; retryAttempts++) {
-            File downloadedFile = fileDownloader.attemptToDownload(remoteFileLocation);
-            if (null != downloadedFile) {
-                if (!shouldWeCheckFileHash || checkFileHash(downloadedFile, driverDetails.hash, driverDetails.hashType)) {
-                    LOG.info("Archive file '" + downloadedFile.getName() + "' is valid : true");
-                    return downloadedFile;
-                } else {
-                    LOG.info("Archive file '" + downloadedFile.getName() + "' is valid : false");
+        synchronized (filename.intern()) {
+            for (int retryAttempts = 1; retryAttempts <= this.fileDownloadRetryAttempts; retryAttempts++) {
+                File downloadedFile = fileDownloader.attemptToDownload(remoteFileLocation);
+                if (null != downloadedFile) {
+                    if (!shouldWeCheckFileHash || checkFileHash(downloadedFile, driverDetails.hash, driverDetails.hashType)) {
+                        LOG.info("Archive file '" + downloadedFile.getName() + "' is valid : true");
+                        return downloadedFile;
+                    } else {
+                        LOG.info("Archive file '" + downloadedFile.getName() + "' is valid : false");
+                    }
                 }
-            }
-            LOG.info("Problem downloading '" + filename + "'... ");
-            if (retryAttempts < this.fileDownloadRetryAttempts) {
-                LOG.info("Retry attempt " + (retryAttempts) + " for '" + filename + "'");
+                LOG.info("Problem downloading '" + filename + "'... ");
+                if (retryAttempts < this.fileDownloadRetryAttempts) {
+                    LOG.info("Retry attempt " + (retryAttempts) + " for '" + filename + "'");
+                }
             }
         }
 
         throw new MojoExecutionException("Unable to successfully download '" + filename + "'!");
     }
 
-    public DriverMap ensureStandaloneExecutableFilesExist() throws MojoFailureException, MojoExecutionException, IOException, URISyntaxException {
+    public synchronized DriverMap ensureStandaloneExecutableFilesExist() throws MojoFailureException, MojoExecutionException, IOException, URISyntaxException {
         LOG.info("Archives will be downloaded to '" + this.downloadedZipFileDirectory.getAbsolutePath() + "'");
         LOG.info("Standalone executable files will be extracted to '" + this.rootStandaloneServerDirectory + "'");
         LOG.info(" ");
