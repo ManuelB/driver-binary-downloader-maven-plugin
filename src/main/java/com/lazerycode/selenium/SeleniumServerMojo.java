@@ -195,8 +195,8 @@ public class SeleniumServerMojo extends AbstractMojo {
     private static final Logger LOG = Logger.getLogger(SeleniumServerMojo.class);
 
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
-        BasicConfigurator.configure(new MavenLoggerLog4jBridge(getLog()));
+    public synchronized void execute() throws MojoExecutionException, MojoFailureException {
+	BasicConfigurator.configure(new MavenLoggerLog4jBridge(getLog()));
         LOG.info(" ");
         LOG.info("--------------------------------------------------------");
         LOG.info(" DOWNLOADING SELENIUM STAND-ALONE EXECUTABLE BINARIES...");
